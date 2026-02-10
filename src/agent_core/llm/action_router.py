@@ -19,16 +19,24 @@ SYSTEM = (
     "- Use shell_exec to inspect files or directories\n"
     "- Use file_write to create artifacts\n"
     "- Prefer simple actions\n"
+    "- When using python_exec, ALWAYS print the final answer (a single number) to stdout.\n"
+    "Python code rules:\n"
+    "- Always output multi-line Python with \\n newlines.\n"
+    "- Never write try/except/with/if using semicolons on one line.\n"
+    "- Prefer csv module over pandas unless explicitly needed.\n\n"
 )
 
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
-def next_action(task: str, observation: str) -> ToolCall:
+def next_action(task: str, observation: str, rules: list[str] | None = None) -> ToolCall:
+    policy = "" if not rules else "\nLEARNED RULES:\n" + "\n".join(rules)
+
     raw = client.chat(
         [{"role": "system", "content": SYSTEM},
-         {"role": "user", "content": f"TASK:\n{task}\n\nOBSERVATION:\n{observation}"}],
+        {"role": "user", "content": f"TASK:\n{task}\n\nOBSERVATION:\n{observation}{policy}"}],
         temperature=0,
     )
+
     try:
         return ToolCall.model_validate(json.loads(raw))
     except Exception:

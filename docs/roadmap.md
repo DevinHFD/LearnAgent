@@ -10,11 +10,11 @@
 
 ## Week 2 -- Autonomous Loops
 
-Day 1: Auto code generation & self-healing\
-Day 2: Multi-tool agent & environment repair\
-Day 3: Memory & reflection\
-Day 4: Evaluation & convergence\
-Day 5: Mini RD-Agent demo
+-   Auto code generation & self-healing
+-   Multi-tool agent & environment repair
+-   Memory & reflection
+-   Evaluation & convergence
+-   Mini RD-Agent demo
 
 ## Week 3 -- Intelligence Layer
 

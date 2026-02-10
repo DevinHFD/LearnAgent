@@ -1,0 +1,36 @@
+{
+  "task": "Read data.csv and compute the mean of column 'value'. If the file does not exist, create a sample data.csv first.",
+  "history": [
+    {
+      "step": 1,
+      "action": {
+        "name": "shell_exec",
+        "args": {
+          "cmd": "ls -l data.csv"
+        }
+      },
+      "result": {
+        "name": "shell_exec",
+        "ok": false,
+        "output": "",
+        "error": "ls: cannot access 'data.csv': No such file or directory"
+      }
+    },
+    {
+      "step": 2,
+      "action": {
+        "name": "file_write",
+        "args": {
+          "path": "data.csv",
+          "content": "id,value\n1,10\n2,20\n3,30"
+        }
+      },
+      "result": {
+        "name": "file_write",
+        "ok": true,
+        "output": "Wrote 23 chars to data.csv",
+        "error": null
+      }
+    }
+  ]
+}

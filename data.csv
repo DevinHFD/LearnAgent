@@ -1,0 +1,10 @@
+Here is a minimal valid sample content for `data.csv`:
+
+```
+id,value
+1,10
+2,20
+3,30
+```
+
+This CSV file contains three rows of data with an 'id' and corresponding 'value'. The mean of the 'value' column can be easily computed from this small dataset.
