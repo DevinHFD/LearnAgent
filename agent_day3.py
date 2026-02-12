@@ -129,14 +129,29 @@ def compile_rules(task: str, learned_rules: List[str]) -> List[str]:
     out = (base + extras)[:10]
     return out
 
+def require_artifacts(task: str) -> list[str]:
+    """
+    Infer required on-disk artifacts from task text (simple heuristic for Day4 benchmarks).
+    Extend this list as you add more benchmark tasks.
+    """
+    t = task.lower()
+    req = []
+    for fname in ["users.csv", "events.csv", "data.csv", "config.json", "report.md"]:
+        if fname in t:
+            req.append(fname)
+    return req
+
+
 
 # ---------------- One episode: run a task with full trace + guardrails ----------------
-def run_episode(task: str, rules: Optional[List[str]] = None) -> Tuple[List[Dict[str, Any]], bool, str]:
+def run_episode(task: str, rules: Optional[List[str]] = None, tag: str = "agent_day3", meta: dict | None = None):
     rm = RunManager()
-    ctx = rm.start(tag="agent_day3")
+    ctx = rm.start(tag=tag)
 
     rm.save_text(ctx, "task.txt", task)
     rm.save_json(ctx, "rules.json", {"rules": rules or []})
+    if meta:
+        rm.save_json(ctx, "meta.json", meta)
 
     done_spec = infer_done_spec(task)
     rm.save_json(ctx, "done_spec.json", done_spec.__dict__)
@@ -150,16 +165,15 @@ def run_episode(task: str, rules: Optional[List[str]] = None) -> Tuple[List[Dict
     repeat_count = 0
 
     for step in range(1, MAX_STEPS + 1):
-        # enrich observation with file preview when helpful
+        # (Optional) add file preview to avoid schema guessing
         observation = maybe_add_file_preview(rm, ctx, task, observation)
-
         rm.save_text(ctx, f"step_{step:02d}_observation.txt", observation)
 
-        # ask LLM for next action
+        # LLM proposes next action
         action = next_action(task, observation, rules)
         rm.save_json(ctx, f"step_{step:02d}_action.json", action.model_dump())
 
-        # repetition tracking (soft)
+        # Soft repetition tracking (anti-stuck notice)
         action_sig = json.dumps(action.model_dump(), sort_keys=True)
         if action_sig == last_action_sig:
             repeat_count += 1
@@ -176,49 +190,83 @@ def run_episode(task: str, rules: Optional[List[str]] = None) -> Tuple[List[Dict
                 "Then proceed to compute/print the final answer."
             )
 
-        # guardrails (hard): may override action (no domain content)
+        # Hard guardrails (may override the action; MUST NOT hard-code domain content)
         guard.track(action)
         override = guard.intervene(action, last_result, observation)
         if override is not None:
             rm.save_json(ctx, f"step_{step:02d}_guardrail_override.json", override.model_dump())
             action = override
 
-        # execute tool (IMPORTANT: pass task so executor can expand __LLM_GENERATE_SAMPLE__)
+        # Execute tool (IMPORTANT: pass task so executor can expand __LLM_GENERATE_SAMPLE__)
         result = execute_tool(action, task=task)
         rm.save_json(ctx, f"step_{step:02d}_result.json", result.model_dump())
 
         history.append({"step": step, "action": action.model_dump(), "result": result.model_dump()})
         last_result = result
 
-        # update observation
+        # Update observation for next loop
         if not result.ok:
             observation = f"ERROR:\n{result.error}"
             continue
         observation = f"SUCCESS:\n{result.output}"
 
-        # done check: file exists or stdout-based
+        # ----- DONE CHECKS -----
+
+        # Case A: file_exists-based tasks (artifact-type tasks like report.md, plot.png)
         if done_spec.file_exists:
             ok, msg = verify_file_exists(rm, ctx, done_spec.file_exists, task=task)
             rm.save_text(ctx, f"step_{step:02d}_done_check.txt", msg)
             if ok:
                 rm.save_text(ctx, "final.txt", f"DONE via file exists: {done_spec.file_exists}")
                 return history, True, ctx.run_id
-        else:
-            ok, msg = check_done(done_spec, result)
-            rm.save_text(ctx, f"step_{step:02d}_done_check.txt", msg)
-            if ok:
-                rm.save_text(ctx, "final.txt", "DONE via stdout criteria")
-                return history, True, ctx.run_id
+            continue
+
+        # Case B: stdout-based tasks
+        # ✅ Critical fix: only accept stdout-based completion from python_exec
+        if action.name != "python_exec":
+            rm.save_text(
+                ctx,
+                f"step_{step:02d}_done_check.txt",
+                f"Not done: stdout-based completion requires python_exec, got {action.name}",
+            )
+            continue
+
+        ok, msg = check_done(done_spec, result)
+        rm.save_text(ctx, f"step_{step:02d}_done_check.txt", msg)
+
+        if ok:
+            # ✅ Artifact gate: require on-disk files mentioned in task (e.g., users.csv/events.csv)
+            req = require_artifacts(task)
+            if req:
+                all_ok = True
+                msgs = []
+                for f in req:
+                    ok_f, msg_f = verify_file_exists(rm, ctx, f, task=task)
+                    msgs.append(msg_f)
+                    all_ok = all_ok and ok_f
+
+                rm.save_text(ctx, f"step_{step:02d}_artifact_check.txt", "\n".join(msgs))
+
+                if not all_ok:
+                    observation = (
+                        "You must create the missing files ON DISK using file_write, "
+                        "then read them from disk and print the final number."
+                    )
+                    continue
+
+            rm.save_text(ctx, "final.txt", "DONE via stdout criteria (python_exec + artifacts)")
+            return history, True, ctx.run_id
 
     rm.save_text(ctx, "final.txt", "FAILED: max steps reached")
     return history, False, ctx.run_id
+
 
 
 if __name__ == "__main__":
     memory = EpisodicMemory()
 
     # ---- Choose a task ----
-    task = "Read data.csv and compute the mean of column 'value'. If the file does not exist, create a sample data.csv first."
+    task = "Read users.csv and events.csv, then print the number of unique users who have at least one event. If either file is missing, create minimal valid samples first"
 
     # Attempt 1
     hist1, ok1, run_id1 = run_episode(task, rules=None)

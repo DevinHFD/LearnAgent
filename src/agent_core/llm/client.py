@@ -9,10 +9,18 @@ class LLMClient:
         )
         self.model = CHAT_MODEL
 
-    def chat(self, messages, temperature=None):
-        r = self.client.chat.completions.create(
+    def chat(self, messages, temperature=0, tools=None, tool_choice=None, response_format=None):
+        kwargs = dict(
             model=self.model,
             messages=messages,
-            temperature=temperature or DEFAULT_TEMP,
+            temperature=temperature,
         )
-        return r.choices[0].message.content
+        if tools is not None:
+            kwargs["tools"] = tools
+        if tool_choice is not None:
+            kwargs["tool_choice"] = tool_choice
+        if response_format is not None:
+            kwargs["response_format"] = response_format
+
+        r = self.client.chat.completions.create(**kwargs)
+        return r.choices[0].message.content or ""

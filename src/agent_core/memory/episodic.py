@@ -7,12 +7,13 @@ class EpisodicMemory:
         self.root = Path(root)
         self.root.mkdir(exist_ok=True)
 
-    def save_episode(self, task: str, history: List[Dict[str, Any]]):
+    def save_episode(self, task: str, history: List[Dict[str, Any]], meta: dict | None = None):
         idx = len(list(self.root.glob("episode_*.json"))) + 1
         p = self.root / f"episode_{idx:04d}.json"
         p.write_text(json.dumps({
-            "task": task,
-            "history": history
+           "task": task, 
+           "history": history, 
+           "meta": meta or {}
         }, ensure_ascii=False, indent=2))
 
     def load_all(self) -> List[Dict[str, Any]]:

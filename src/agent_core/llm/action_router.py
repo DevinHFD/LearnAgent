@@ -26,6 +26,10 @@ SYSTEM = (
     "- Prefer csv module over pandas unless explicitly needed.\n\n"
 )
 
+FALLBACK = ToolCall(name="shell_exec", args={"cmd": "pwd && ls"})
+
+def _parse_toolcall(s: str) -> ToolCall:
+    return ToolCall.model_validate(json.loads(s))
 
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(1))
 def next_action(task: str, observation: str, rules: list[str] | None = None) -> ToolCall:
@@ -36,13 +40,25 @@ def next_action(task: str, observation: str, rules: list[str] | None = None) -> 
         {"role": "user", "content": f"TASK:\n{task}\n\nOBSERVATION:\n{observation}{policy}"}],
         temperature=0,
     )
-
+     # 1) direct parse
     try:
-        return ToolCall.model_validate(json.loads(raw))
+        return _parse_toolcall(raw)
     except Exception:
-        fix = client.chat(
-            [{"role": "system", "content": "Fix JSON. Return ONLY corrected JSON."},
-             {"role": "user", "content": raw}],
-            temperature=0,
-        )
-        return ToolCall.model_validate(json.loads(fix))
+        pass
+
+    # 2) ask model to fix json
+    fix = client.chat(
+        [{"role": "system", "content": "Fix the JSON. Return ONLY corrected JSON."},
+         {"role": "user", "content": raw}],
+        temperature=0,
+    )
+
+    # 3) parse fix, else fallback
+    try:
+        if fix and fix.strip():
+            return _parse_toolcall(fix)
+    except Exception:
+        pass
+
+    # 4) last resort fallback: safe, informative, progress-making
+    return FALLBACK
