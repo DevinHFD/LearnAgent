@@ -13,7 +13,7 @@ def reset_env():
     for f in ["users.csv", "events.csv"]:
         if os.path.exists(f):
             os.remove(f)
-N = 5
+N = 1
 
 def run_strategy(task: str, rules, tag: str = "agent_day4", meta: dict | None = None) -> dict:
     reset_env()
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # strategy 2: compiled base rules
     base_rules = compile_rules(task, learned.get("rules", []))
     print("Running strategy: compiled_rules")
-    r2 = [run_strategy(task, rules=base_rules, tag=f"compiled_rules_{i}",meta={"strategy": "compiled_rules", "trial": i}) for i in range(N)]
+    r2 = [run_strategy(task, rules=base_rules, tag=f"day4_compiled_rules_{i}",meta={"strategy": "compiled_rules", "trial": i}) for i in range(N)]
     results["strategies"]["compiled_rules"] = r2
 
     # summarize

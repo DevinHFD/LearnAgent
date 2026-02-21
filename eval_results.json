@@ -3,158 +3,48 @@
   "strategies": {
     "no_rules": [
       {
-        "ok": true,
-        "run_id": "20260211_234722_no_rules_0",
+        "ok": false,
+        "run_id": "20260220_223057_day4_no_rules_0",
         "metrics": {
-          "steps": 1,
+          "steps": 12,
           "tool_counts": {
-            "shell_exec": 1
+            "shell_exec": 2,
+            "file_write": 10
           },
           "errors": 0,
-          "repeats": 0,
+          "repeats": 10,
           "guardrail_overrides": 0
         },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234729_no_rules_1",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234732_no_rules_2",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234734_no_rules_3",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234736_no_rules_4",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
+        "score": 14.0
       }
     ],
     "compiled_rules": [
       {
         "ok": true,
-        "run_id": "20260211_234745_compiled_rules_0",
+        "run_id": "20260220_223237_day4_compiled_rules_0",
         "metrics": {
-          "steps": 1,
+          "steps": 2,
           "tool_counts": {
-            "shell_exec": 1
+            "shell_exec": 1,
+            "python_exec": 1
           },
           "errors": 0,
           "repeats": 0,
           "guardrail_overrides": 0
         },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234754_compiled_rules_1",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "file_write": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234807_compiled_rules_2",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234813_compiled_rules_3",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
-      },
-      {
-        "ok": true,
-        "run_id": "20260211_234818_compiled_rules_4",
-        "metrics": {
-          "steps": 1,
-          "tool_counts": {
-            "shell_exec": 1
-          },
-          "errors": 0,
-          "repeats": 0,
-          "guardrail_overrides": 0
-        },
-        "score": 127.0
+        "score": 124.0
       }
     ]
   },
   "summary": {
     "no_rules": {
-      "mean_score": 127.0,
-      "median_score": 127.0,
-      "success_rate": 1.0
+      "mean_score": 14.0,
+      "median_score": 14.0,
+      "success_rate": 0.0
     },
     "compiled_rules": {
-      "mean_score": 127.0,
-      "median_score": 127.0,
+      "mean_score": 124.0,
+      "median_score": 124.0,
       "success_rate": 1.0
     }
   }
