@@ -1,10 +1,8 @@
-# src/agent_core/verify/verifier.py
 from __future__ import annotations
-
 import csv
 import os
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from ..specs.task_spec import TaskSpec
 from ..schemas.tool import ToolResult
@@ -15,6 +13,7 @@ class VerifyResult:
     ok: bool
     messages: List[str] = field(default_factory=list)
     hint: str = ""
+    gaps: Dict[str, object] = field(default_factory=dict)
 
 
 def _ok(msg: str) -> Tuple[bool, str]:
@@ -80,47 +79,62 @@ def check_csv_min_rows(path: str, n: int) -> Tuple[bool, str]:
     return _ok(f"OK: CSV {path} has >= {n} data rows ({len(rows)})")
 
 
+def _init_gaps() -> Dict[str, object]:
+    return {
+        "missing_files": [],            # list[str]
+        "csv_missing_columns": {},      # dict[file, list[cols]]
+        "csv_rows_needed": {},          # dict[file, int]
+        "stdout_error": None,           # str|None
+    }
+
+
 def verify(spec: TaskSpec, last: Optional[ToolResult], check_stdout: bool = True) -> VerifyResult:
     """
-    If check_stdout=False, only validate artifacts (files/csv schema/rows).
+    If check_stdout=False: validate ONLY artifacts (files/csv schema/rows) and return structured gaps.
+    If check_stdout=True: validate artifacts + stdout constraints.
     """
     msgs: List[str] = []
+    gaps: Dict[str, object] = _init_gaps()
 
     # 1) required files
     for f in spec.required_files:
         ok, msg = check_file_exists(f)
         msgs.append(msg)
         if not ok:
-            return VerifyResult(
-                ok=False,
-                messages=msgs,
-                hint=f"Create missing file {f!r} ON DISK using file_write, then continue.",
-            )
+            gaps["missing_files"].append(f)
 
     # 2) CSV schema constraints
     for path, cols in spec.csv_required_columns.items():
         ok, msg = check_csv_has_columns(path, cols)
         msgs.append(msg)
         if not ok:
-            return VerifyResult(
-                ok=False,
-                messages=msgs,
-                hint=f"Fix {path!r} header using file_write so it contains columns {cols}.",
-            )
+            gaps["csv_missing_columns"][path] = cols
 
     # 3) CSV row count constraints
     for path, n in spec.csv_min_rows.items():
         ok, msg = check_csv_min_rows(path, n)
         msgs.append(msg)
         if not ok:
-            return VerifyResult(
-                ok=False,
-                messages=msgs,
-                hint=f"Add at least {n} data rows to {path!r} using file_write, then continue.",
-            )
+            gaps["csv_rows_needed"][path] = n
+
+    artifacts_ok = (
+        len(gaps["missing_files"]) == 0
+        and len(gaps["csv_missing_columns"]) == 0
+        and len(gaps["csv_rows_needed"]) == 0
+    )
 
     if not check_stdout:
-        return VerifyResult(ok=True, messages=msgs, hint="ARTIFACTS_OK")
+        hint = "ARTIFACTS_OK" if artifacts_ok else "Fix artifacts based on gaps."
+        return VerifyResult(ok=artifacts_ok, messages=msgs, hint=hint, gaps=gaps)
+
+    # If artifacts fail, stop early (stdout checks meaningless)
+    if not artifacts_ok:
+        return VerifyResult(
+            ok=False,
+            messages=msgs,
+            hint="Artifacts not satisfied. Create/fix files ON DISK using file_write based on gaps.",
+            gaps=gaps,
+        )
 
     # 4) stdout constraints
     stdout = ""
@@ -131,25 +145,28 @@ def verify(spec: TaskSpec, last: Optional[ToolResult], check_stdout: bool = True
         ok, msg = check_stdout_exact(stdout, spec.stdout_exact)
         msgs.append(msg)
         if not ok:
+            gaps["stdout_error"] = msg
             return VerifyResult(
                 ok=False,
                 messages=msgs,
                 hint=f"Recompute and print EXACT stdout {spec.stdout_exact!r} using python_exec.",
+                gaps=gaps,
             )
 
     if spec.stdout_is_number:
         ok, msg = check_stdout_is_number(stdout)
         msgs.append(msg)
         if not ok:
+            gaps["stdout_error"] = msg
             return VerifyResult(
                 ok=False,
                 messages=msgs,
                 hint="Compute the final numeric answer and print ONLY the number to stdout using python_exec.",
+                gaps=gaps,
             )
 
-    return VerifyResult(ok=True, messages=msgs, hint="DONE")
+    return VerifyResult(ok=True, messages=msgs, hint="DONE", gaps=gaps)
 
 
 def verify_artifacts_only(spec: TaskSpec) -> VerifyResult:
-    # Convenience wrapper
     return verify(spec, last=None, check_stdout=False)
