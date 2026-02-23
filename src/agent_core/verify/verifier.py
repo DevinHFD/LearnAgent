@@ -1,3 +1,4 @@
+# src/agent_core/verify/verifier.py
 from __future__ import annotations
 
 import csv
@@ -79,7 +80,10 @@ def check_csv_min_rows(path: str, n: int) -> Tuple[bool, str]:
     return _ok(f"OK: CSV {path} has >= {n} data rows ({len(rows)})")
 
 
-def verify(spec: TaskSpec, last: Optional[ToolResult]) -> VerifyResult:
+def verify(spec: TaskSpec, last: Optional[ToolResult], check_stdout: bool = True) -> VerifyResult:
+    """
+    If check_stdout=False, only validate artifacts (files/csv schema/rows).
+    """
     msgs: List[str] = []
 
     # 1) required files
@@ -115,6 +119,9 @@ def verify(spec: TaskSpec, last: Optional[ToolResult]) -> VerifyResult:
                 hint=f"Add at least {n} data rows to {path!r} using file_write, then continue.",
             )
 
+    if not check_stdout:
+        return VerifyResult(ok=True, messages=msgs, hint="ARTIFACTS_OK")
+
     # 4) stdout constraints
     stdout = ""
     if last is not None and getattr(last, "output", None) is not None:
@@ -141,3 +148,8 @@ def verify(spec: TaskSpec, last: Optional[ToolResult]) -> VerifyResult:
             )
 
     return VerifyResult(ok=True, messages=msgs, hint="DONE")
+
+
+def verify_artifacts_only(spec: TaskSpec) -> VerifyResult:
+    # Convenience wrapper
+    return verify(spec, last=None, check_stdout=False)
