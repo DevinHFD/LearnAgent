@@ -4,6 +4,7 @@
     "Create missing CSV files with necessary headers and sample data to avoid runtime errors.",
     "Use set operations in Python to find unique elements across multiple CSV files.",
     "Skip header rows when reading CSV files to process only the data rows.",
-    "Verify file paths and existence of input files before executing data manipulation code."
+    "Verify file paths and existence of input files before executing data manipulation code.",
+    "Verify file paths and existence of files used in scripts to prevent FileNotFoundError."
   ]
 }

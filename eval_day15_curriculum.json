@@ -1,0 +1,176 @@
+{
+  "config": {
+    "episodes_per_task": 3,
+    "strategies": [
+      "baseline",
+      "beam",
+      "critic"
+    ]
+  },
+  "tasks": [
+    {
+      "task_id": "users_events_v1",
+      "runs": [
+        {
+          "strategy": "baseline",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "critic",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "critic",
+          "i": 1,
+          "ok": true
+        },
+        {
+          "strategy": "critic",
+          "i": 2,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "task_id": "mean_csv_v1",
+      "runs": [
+        {
+          "strategy": "baseline",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "critic",
+          "i": 0,
+          "ok": true
+        },
+        {
+          "strategy": "critic",
+          "i": 1,
+          "ok": true
+        },
+        {
+          "strategy": "critic",
+          "i": 2,
+          "ok": true
+        }
+      ]
+    },
+    {
+      "task_id": "report_md_v1",
+      "runs": [
+        {
+          "strategy": "baseline",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "baseline",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 0,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 1,
+          "ok": false
+        },
+        {
+          "strategy": "beam",
+          "i": 2,
+          "ok": false
+        },
+        {
+          "strategy": "critic",
+          "i": 0,
+          "ok": true
+        },
+        {
+          "strategy": "critic",
+          "i": 1,
+          "ok": true
+        },
+        {
+          "strategy": "critic",
+          "i": 2,
+          "ok": true
+        }
+      ]
+    }
+  ],
+  "by_strategy": {
+    "baseline": {
+      "success_rate": 0.0,
+      "n": 9
+    },
+    "beam": {
+      "success_rate": 0.0,
+      "n": 9
+    },
+    "critic": {
+      "success_rate": 0.8888888888888888,
+      "n": 9
+    }
+  }
+}
